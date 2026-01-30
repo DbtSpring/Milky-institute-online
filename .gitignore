@@ -1,0 +1,44 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+target
+*.class
+
+*.log
+.settings
+.project
+logs
+job
+
+
+
+**/application-*.yml
+**/application-*.properties
+**/bootstrap-*.yml
+**/bootstrap-*.properties
+# 全局配置文件（若本地有敏感信息，可改为提交模板，本地重命名使用）
+# 注意：若需提交基础配置模板，可将敏感文件重命名为 application-template.yml 并提交，本地改为 application.yml
+**/application.yml
+**/application.properties
+**/bootstrap.yml
+**/bootstrap.properties
+# 密钥/证书/加密文件
+*.pem
+*.key
+*.cer
+*.jks
+*.pfx
+# 本地配置文件（开发者本地自定义，无统一标准）
+**/application-local.*
+**/bootstrap-local.*
+# 敏感信息临时文件
+*.env
+.env/
+*.secret
+secrets/

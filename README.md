@@ -1,0 +1,69 @@
+# 星瀚学堂
+
+## 项目简介：
+
+星瀚学堂是一个基于微服务架构的生产级在线教育项目，面向成年人的非学历职业技能培训。分为学生端和管理端两部分。项目中主要包含有学习服务、课程服务、点赞服务、优惠券服务、搜索服务等。是“天机学堂”的进一步实现和改进版。本仓库为后端仓库
+
+## 技术栈：
+
+SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-Job等
+
+## 项目负责（核心功能）
+
+1. 负责实现学习服务，基于Redis合并写请求和DelayQueue实现断点续播功能，优化高并发的数据库写业务，使误差控制在15秒内。
+2. 独立设计并实现问答评论模块，根据用户选择的匿名与否，记录问答或者评论信息，并产生对应的积分，通过RabbitMQ推送给积分系统。
+3. 独立负责点赞服务的搭建与实现，用户前端发送点赞请求到达点赞服务，点赞服务负责存储点赞记录与点赞数量，并通过定时任务发送MQ消息通知业务方更新点赞数量。
+4. 负责签到功能实现与优化，基于BitMap数据结构存储签到记录，通过MQ推送签到信息及积分到积分服务。
+5. 负责积分排行榜功能实现，利用Redis的Zset存储本月实时排行榜数据。通过XXL-Job分片任务持久化历史榜单到Mysql数据库中，Mysql采用的是分库分表，利用MybatisPlus的动态表名来计算表名。
+6. 负责优惠券管理功能，发放优惠券时利用按位加权求和算法和异步线程生成兑换码，并利用BitMap验证兑换码是否已经兑换。保证了兑换码的可读性、不可重兑、防爆刷和高效性。
+7. 负责优惠券的领取功能，利用乐观锁和分布式锁Redisson解决并发安全问题，解决事务边界原因导致的锁失效问题，通过aspectj动态代理解决事务失效问题。
+8. 负责实现通用分布式锁的封装，基于AOP、自定义注解、工厂模式和策略模式实现。
+9. 负责优惠券的使用，通过查询所有可用优惠券，经过初筛、细筛、排列组合计算出所有可用优惠券组合，并基于CompleteableFuture并行计算每种组合的优惠明细，最后按照规则筛选出最优解。
+
+## 目前项目进度
+
+目前是基于“天机学堂”基础版本，一些功能没做
+
+相关微服务及1.0.0版本的完成状态如下：
+
+| 微服务名称   | 功能描述 | 完成状态                                                     |
+| ------------ | -------- | ------------------------------------------------------------ |
+| tj-parent    | 父工程   | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-common    | 通用工程 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-message   | 消息中心 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-gateway   | 网关     | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-auth      | 权限服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-user      | 用户服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-pay       | 支付服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-course    | 课程服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-exam      | 考试服务 | **<span style="color: rgb(220,155,4); background-color: inherit">O</span>** |
+| tj-search    | 搜索服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-trade     | 交易服务 | **<span style="color: rgb(220,155,4); background-color: inherit">O</span>** |
+| tj-learning  | 学习服务 | **<span style="color: rgb(216,57,49); background-color: inherit">X</span>** |
+| tj-promotion | 促销服务 | **<span style="color: rgb(216,57,49); background-color: inherit">X</span>** |
+| tj-media     | 媒资服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
+| tj-data      | 数据服务 | **<span style="color: rgb(220,155,4); background-color: inherit">O</span>** |
+| tj-remark    | 评价服务 | **<span style="color: rgb(216,57,49); background-color: inherit">X</span>** |
+
+## 项目域名列表
+
+| 名称             | 域名               | 账号密码     | 端口  |
+| ---------------- | ------------------ | ------------ | ----- |
+| Git私服          | git.tianji.com     | tjxt/123321  | 10880 |
+| Jenkins持续集成  | jenkins.tianji.com | root/123     | 18080 |
+| RabbitMQ         | mq.tianji.com      | tjxt/123321  | 15672 |
+| Nacos控制台      | nacos.tianji.com   | nacos/nacos  | 8848  |
+| xxl-job控制台    | xxljob.tianji.com  | admin/123456 | 8880  |
+| ES的Kibana控制台 | es.tianji.com      | -            | 5601  |
+| 微服务网关       | api.tianji.com     | -            | 10010 |
+| 用户端入口       | www.tianji.com     | -            | 18081 |
+| 管理端入口       | manage.tianji.com  | -            |       |
+
+## 项目运维流程
+
+提交代码到gogs-->通知jenkins-->jenkins拉取代码-->自动构建-->自动部署-->自动测试（基于脚本）
+
+
+
+
+
