@@ -26,24 +26,24 @@ SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-
 
 相关微服务及1.0.0版本的完成状态如下：
 
-| 微服务名称   | 功能描述 | 完成状态                                                     |
-| ------------ | -------- | ------------------------------------------------------------ |
-| tj-parent    | 父工程   | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-common    | 通用工程 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-message   | 消息中心 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-gateway   | 网关     | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-auth      | 权限服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-user      | 用户服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-pay       | 支付服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-course    | 课程服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-exam      | 考试服务 | **<span style="color: rgb(220,155,4); background-color: inherit">O</span>** |
-| tj-search    | 搜索服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-trade     | 交易服务 | **<span style="color: rgb(220,155,4); background-color: inherit">O</span>** |
-| tj-learning  | 学习服务 | **<span style="color: rgb(216,57,49); background-color: inherit">X</span>** |
-| tj-promotion | 促销服务 | **<span style="color: rgb(216,57,49); background-color: inherit">X</span>** |
-| tj-media     | 媒资服务 | **<span style="color: rgb(46,161,33); background-color: inherit">√</span>** |
-| tj-data      | 数据服务 | **<span style="color: rgb(220,155,4); background-color: inherit">O</span>** |
-| tj-remark    | 评价服务 | **<span style="color: rgb(216,57,49); background-color: inherit">X</span>** |
+| 微服务名称   | 功能描述 | 完成状态 |
+| ------------ | -------- | -------- |
+| tj-parent    | 父工程   | ✅ 已完成 |
+| tj-common    | 通用工程 | ✅ 已完成 |
+| tj-message   | 消息中心 | ✅ 已完成 |
+| tj-gateway   | 网关     | ✅ 已完成 |
+| tj-auth      | 权限服务 | ✅ 已完成 |
+| tj-user      | 用户服务 | ✅ 已完成 |
+| tj-pay       | 支付服务 | ✅ 已完成 |
+| tj-course    | 课程服务 | ✅ 已完成 |
+| tj-exam      | 考试服务 | ⏳ 开发中 |
+| tj-search    | 搜索服务 | ✅ 已完成 |
+| tj-trade     | 交易服务 | ⏳ 开发中 |
+| tj-learning  | 学习服务 | ⏳ 开发中 |
+| tj-promotion | 促销服务 | ❌ 未开始 |
+| tj-media     | 媒资服务 | ✅ 已完成 |
+| tj-data      | 数据服务 | ⏳ 开发中 |
+| tj-remark    | 评价服务 | ❌ 未开始 |
 
 ## 项目域名列表
 
