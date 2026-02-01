@@ -2,12 +2,14 @@ package com.tianji.authsdk.resource.interceptors;
 
 import com.tianji.auth.common.constants.JwtConstants;
 import com.tianji.common.utils.UserContext;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@Api("解析出‘tj-gateway解析token并放入请求头的userId’，放入ThreadLocal")
 @Slf4j
 public class UserInfoInterceptor implements HandlerInterceptor {
 

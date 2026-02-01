@@ -18,6 +18,7 @@ import java.util.List;
 import static com.tianji.auth.common.constants.JwtConstants.AUTHORIZATION_HEADER;
 import static com.tianji.auth.common.constants.JwtConstants.USER_HEADER;
 
+//全局过滤器
 @Component
 public class AccountAuthFilter implements GlobalFilter, Ordered {
 
@@ -49,14 +50,14 @@ public class AccountAuthFilter implements GlobalFilter, Ordered {
         String token = authHeaders == null ? "" : authHeaders.get(0);
         R<LoginUserDTO> r = authUtil.parseToken(token);
 
-        // 4.如果用户是登录状态，尝试更新请求头，传递用户信息
+        // 4.如果用户是登录状态，尝试更新请求头，在请求头里传递用户信息
         if(r.success()){
-            exchange.mutate()
+            exchange.mutate() //修改
                     .request(builder -> builder.header(USER_HEADER, r.getData().getUserId().toString()))
                     .build();
         }
 
-        // 5.校验权限
+        // 5.校验权限（包括业务层面的权限校验）
         authUtil.checkAuth(antPath, r);
 
         // 6.放行

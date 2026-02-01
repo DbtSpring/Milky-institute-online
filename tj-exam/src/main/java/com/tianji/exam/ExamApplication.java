@@ -10,6 +10,8 @@ import org.springframework.core.env.Environment;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+
+//test fuck！
 @Slf4j
 @MapperScan("com.tianji.exam.mapper")
 @SpringBootApplication

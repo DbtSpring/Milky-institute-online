@@ -36,7 +36,9 @@ public class PageQuery {
         return (pageNo - 1) * pageSize;
     }
 
-    public <T> Page<T> toMpPage(OrderItem ... orderItems) {
+    //方法重载1
+    public <T> Page<T> toMpPage(OrderItem ... orderItems) { //等价于数组，但调用更灵活,可以为1-多个，也可以为空
+        //Page<T>和OrderItem都是MP分页查询核心类
         Page<T> page = new Page<>(pageNo, pageSize);
         // 是否手动指定排序方式
         if (orderItems != null && orderItems.length > 0) {
@@ -55,6 +57,7 @@ public class PageQuery {
         return page;
     }
 
+    //方法重载2
     public <T> Page<T> toMpPage(String defaultSortBy, boolean isAsc) {
         if (StringUtils.isBlank(sortBy)){
             sortBy = defaultSortBy;
