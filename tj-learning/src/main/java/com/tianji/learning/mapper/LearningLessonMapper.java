@@ -2,6 +2,7 @@ package com.tianji.learning.mapper;
 
 import com.tianji.learning.pojo.entity.LearningLesson;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * <p>
@@ -12,4 +13,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface LearningLessonMapper extends BaseMapper<LearningLesson> {
 
+    @Select("select sum(week_freq) from learning_lesson where user_id = #{userId} and lesson_status=1")
+    Integer queryTotalPlan(Long userId);
 }
