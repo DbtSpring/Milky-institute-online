@@ -17,6 +17,7 @@ import com.tianji.learning.pojo.entity.LearningRecord;
 import com.tianji.learning.mapper.LearningRecordMapper;
 import com.tianji.learning.service.ILearningLessonService;
 import com.tianji.learning.service.ILearningRecordService;
+import com.tianji.learning.utils.LearningRecordDelayTaskHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +38,10 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
 
     private final ILearningLessonService lessonService;
     private final CourseClient courseClient;
+    private final LearningRecordDelayTaskHandler taskHandler;
 
     @Override
+    //查询指定课程的学习记录
     public LearningLessonDTO queryLearningRecordByCourse(Long courseId) {
         // 1.获取登录用户
         Long userId = UserContext.getUser();
@@ -59,6 +62,7 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
 
     @Override
     @Transactional
+    //提交学习记录
     public void addLearningRecord(LearningRecordFormDTO recordDTO) {
         // 1.获取登录用户
         Long userId = UserContext.getUser();
@@ -104,8 +108,10 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
                 .update();
     }
 
+
+
     private boolean handleVideoRecord(Long userId, LearningRecordFormDTO recordDTO) {
-        // 1.查询旧的学习记录
+        // 1.查询旧的学习记录（🚨方法内涉及到Redis）
         LearningRecord old = queryOldRecord(recordDTO.getLessonId(), recordDTO.getSectionId());
         // 2.判断是否存在
         if (old == null) {
@@ -122,28 +128,63 @@ public class LearningRecordServiceImpl extends ServiceImpl<LearningRecordMapper,
             return false;
         }
         // 4.存在，则更新
-        // 4.1.判断现在是否是第一次完成 true：刚完成  false：一直未完成/以前已经完成了
+        // 判断现在是否是第一次完成 true：刚完成  false：一直未完成/以前已经完成了
         boolean finished = !old.getFinished() && recordDTO.getMoment() * 2 >= recordDTO.getDuration();
-        // 4.2.更新数据
+
+        //4.1 未完成播放的（非首次完成播放的），放入DelayQueue定时20s。等不播放了会自动把redis数据update到数据库
+        if (!finished) {
+            LearningRecord record = new LearningRecord();
+            //RecordCacheData的key
+            record.setLessonId(recordDTO.getLessonId());
+            //RecordCacheData的field
+            record.setSectionId(recordDTO.getSectionId());
+
+            //RecordCacheData的value
+            record.setMoment(recordDTO.getMoment());
+            record.setId(old.getId());
+            record.setFinished(old.getFinished());
+            //🚨放入DelayQueue定时20s。等如果判断不播放了（数据不变）会自动把redis数据update到数据库
+            taskHandler.addLearningRecordTask(record);
+            return false;
+        }
+
+
+        // 4.2.第一次完成播放的：更新数据库数据
         boolean success = lambdaUpdate()
                 .set(LearningRecord::getMoment, recordDTO.getMoment())
-                .set(finished, LearningRecord::getFinished, true) //布尔更新（if true:set)
-                .set(finished, LearningRecord::getFinishTime, recordDTO.getCommitTime())
+                .set(LearningRecord::getFinished, true)
+                .set(LearningRecord::getFinishTime, recordDTO.getCommitTime())
                 .eq(LearningRecord::getId, old.getId())
                 .update();
         if(!success){
             throw new DbException("更新学习记录失败！");
         }
-        return finished ;
+
+        // 4.2.同时清理缓存（尤其是finished状态）
+        //🚨
+        taskHandler.cleanRecordCache(recordDTO.getLessonId(), recordDTO.getSectionId());
+        return true;
     }
 
+
+
     private LearningRecord queryOldRecord(Long lessonId, Long sectionId) {
-        return lambdaQuery()
+        // 🚨 1.查询缓存
+        LearningRecord record = taskHandler.readRecordCache(lessonId, sectionId);
+        // 2.如果命中，直接返回
+        if (record != null) {
+            return record;
+        }
+        // 3.未命中，查询数据库
+        record = lambdaQuery()
                 .eq(LearningRecord::getLessonId, lessonId)
                 .eq(LearningRecord::getSectionId, sectionId)
-                .last("limit 1")
                 .one();
+        // 🚨4.写入缓存
+        taskHandler.writeRecordCache(record);
+        return record;
     }
+
 
     private boolean handleExamRecord(Long userId, LearningRecordFormDTO recordDTO) {
         // 1.转换DTO为PO
