@@ -4,60 +4,37 @@ import com.tianji.common.constants.RegexConstants;
 import com.tianji.common.exceptions.BadRequestException;
 
 /**
- * <h1 style='font-weight:500'>1.兑换码算法说明：</h1>
- * <p>兑换码分为明文和密文，明文是50位二进制数，密文是长度为10的Base32编码的字符串 </p>
- * <h1 style='font-weight:500'>2.兑换码的明文结构：</h1>
- * <p style='padding: 0 15px'>14(校验码) + 4 (新鲜值) + 32(序列号) </p>
- *   <ul style='padding: 0 15px'>
- *       <li>序列号：一个单调递增的数字，可以通过Redis来生成</li>
- *       <li>新鲜值：可以是优惠券id的最后4位，同一张优惠券的兑换码就会有一个相同标记</li>
- *       <li>载荷：将新鲜值（4位）拼接序列号（32位）得到载荷</li>
- *       <li>校验码：将载荷4位一组，每组乘以加权数，最后累加求和，然后对2^14求余得到</li>
- *   </ul>
- *  <h1 style='font-weight:500'>3.兑换码的加密过程：</h1>
- *     <ol type='a' style='padding: 0 15px'>
- *         <li>首先利用优惠券id计算新鲜值 f</li>
- *         <li>将f和序列号s拼接，得到载荷payload</li>
- *         <li>然后以f为角标，从提前准备好的16组加权码表中选一组</li>
- *         <li>对payload做加权计算，得到校验码 c  </li>
- *         <li>利用c的后4位做角标，从提前准备好的异或密钥表中选择一个密钥：key</li>
- *         <li>将payload与key做异或，作为新payload2</li>
- *         <li>然后拼接兑换码明文：f (4位) + payload2（36位）</li>
- *         <li>利用Base32对密文转码，生成兑换码</li>
- *     </ol>
- * <h1 style='font-weight:500'>4.兑换码的解密过程：</h1>
- * <ol type='a' style='padding: 0 15px'>
- *      <li>首先利用Base32解码兑换码，得到明文数值num</li>
- *      <li>取num的高14位得到c1，取num低36位得payload </li>
- *      <li>利用c1的后4位做角标，从提前准备好的异或密钥表中选择一个密钥：key</li>
- *      <li>将payload与key做异或，作为新payload2</li>
- *      <li>利用加密时的算法，用payload2和s1计算出新校验码c2，把c1和c2比较，一致则通过 </li>
- * </ol>
- */
+ *	兑换码算法说明
+ **/
 public class CodeUtil {
     /**
-     * 异或密钥表，用于最后的数据混淆
+     * 异或密钥表，用于最后的数据混淆（由signuture后5位决定）
      */
     private final static long[] XOR_TABLE = {
-            61261925471L, 61261925523L, 58169127203L, 64169927267L,
-            64169927199L, 61261925629L, 58169127227L, 64169927363L,
-            59169127063L, 64169927359L, 58169127291L, 61261925739L,
-            59169127133L, 55139281911L, 56169127077L, 59169127167L
+            45139281907L, 61261925523L, 58169127203L, 27031786219L,
+            64169927199L, 46169126943L, 32731286209L, 52082227349L,
+            59169127063L, 36169126987L, 52082200939L, 61261925739L,
+            32731286563L, 27031786427L, 56169127077L, 34111865001L,
+            52082216763L, 61261925663L, 56169127113L, 45139282119L,
+            32731286479L, 64169927233L, 41390251661L, 59169127121L,
+            64169927321L, 55139282179L, 34111864881L, 46169127031L,
+            58169127221L, 61261925523L, 36169126943L, 64169927363L,
     };
     /**
-     * fresh值的偏移位数
-     */
+     * fresh值的偏移位数（可以向左或者向右
+     ）     */
     private final static int FRESH_BIT_OFFSET = 32;
     /**
      * 校验码的偏移位数
      */
     private final static int CHECK_CODE_BIT_OFFSET = 36;
+
     /**
      * fresh值的掩码，4位
      */
     private final static int FRESH_MASK = 0xF;
     /**
-     * 验证码的掩码，14位
+     * 验证码signature的掩码，14位
      */
     private final static int CHECK_CODE_MASK = 0b11111111111111;
     /**
@@ -69,7 +46,7 @@ public class CodeUtil {
      */
     private final static long SERIAL_NUM_MASK = 0xFFFFFFFFL;
     /**
-     * 序列号加权运算的秘钥表
+     * 序列号加权运算的秘钥表（由4位新鲜值决定）
      */
     private final static int[][] PRIME_TABLE = {
             {23, 59, 241, 61, 607, 67, 977, 1217, 1289, 1601},
@@ -100,12 +77,12 @@ public class CodeUtil {
         // 1.计算新鲜值
         fresh = fresh & FRESH_MASK;
         // 2.拼接payload，fresh（4位） + serialNum（32位）
+        //<<左移， |或运算
         long payload = fresh << FRESH_BIT_OFFSET | serialNum;
         // 3.计算验证码
         long checkCode = calcCheckCode(payload, (int) fresh);
-        System.out.println("checkCode = " + checkCode);
         // 4.payload做大质数异或运算，混淆数据
-        payload ^= XOR_TABLE[(int) (checkCode & FRESH_MASK)];
+        payload ^= XOR_TABLE[(int) (checkCode & 0b11111)];
         // 5.拼接兑换码明文: 校验码（14位） + payload（36位）
         long code = checkCode << CHECK_CODE_BIT_OFFSET | payload;
         // 6.转码
@@ -137,7 +114,7 @@ public class CodeUtil {
         // 3.获取高14位，校验码
         int checkCode = (int) (num >>> CHECK_CODE_BIT_OFFSET);
         // 4.载荷异或大质数，解析出原来的payload
-        payload ^= XOR_TABLE[(checkCode & FRESH_MASK)];
+        payload ^= XOR_TABLE[(checkCode & 0b11111)];
         // 5.获取高4位，fresh
         int fresh = (int) (payload >>> FRESH_BIT_OFFSET & FRESH_MASK);
         // 6.验证格式：

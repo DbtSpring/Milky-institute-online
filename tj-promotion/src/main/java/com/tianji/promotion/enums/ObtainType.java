@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ObtainType implements BaseEnum {
-    PUBLIC(1, "手动领取"),
+    PUBLIC(1, "客户端手动领取"),
     ISSUE(2, "发放兑换码"),
     ;
     @EnumValue

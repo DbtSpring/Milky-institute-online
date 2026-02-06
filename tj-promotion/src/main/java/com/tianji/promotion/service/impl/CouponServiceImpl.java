@@ -1,5 +1,6 @@
 package com.tianji.promotion.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.common.domain.dto.PageDTO;
@@ -9,15 +10,18 @@ import com.tianji.common.utils.BeanUtils;
 import com.tianji.common.utils.CollUtils;
 import com.tianji.common.utils.StringUtils;
 import com.tianji.promotion.enums.CouponStatus;
+import com.tianji.promotion.enums.ObtainType;
 import com.tianji.promotion.mapper.CouponMapper;
 import com.tianji.promotion.pojo.dto.CouponFormDTO;
 import com.tianji.promotion.pojo.dto.CouponIssueFormDTO;
 import com.tianji.promotion.pojo.entity.Coupon;
 import com.tianji.promotion.pojo.entity.CouponScope;
+import com.tianji.promotion.pojo.entity.ExchangeCode;
 import com.tianji.promotion.pojo.query.CouponQuery;
 import com.tianji.promotion.pojo.vo.CouponPageVO;
 import com.tianji.promotion.service.ICouponScopeService;
 import com.tianji.promotion.service.ICouponService;
+import com.tianji.promotion.service.IExchangeCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +35,7 @@ import java.util.stream.Collectors;
 public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> implements ICouponService {
 
     private final ICouponScopeService scopeService;
+    private final IExchangeCodeService codeService;
 
     @Override
     @Transactional
@@ -110,6 +115,80 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         // 4.3.写入数据库
         updateById(c);
 
-        // TODO 兑换码生成
+        // 5.判断是否需要生成兑换码，优惠券类型必须是兑换码，优惠券状态必须是待发放
+        if(coupon.getObtainWay() == ObtainType.ISSUE && coupon.getStatus() == CouponStatus.DRAFT){
+            coupon.setIssueEndTime(c.getIssueEndTime());
+            codeService.asyncGenerateCode(coupon);
+        }
+    }
+
+    @Override
+    public void updateCoupon(CouponFormDTO dto) {
+        Coupon coupon = lambdaQuery()
+                .eq(Coupon::getId, dto.getId())
+                .select(Coupon::getStatus)
+                .last("limit 1")
+                .one();
+        if(coupon == null){
+            throw new BizIllegalException("要更新的优惠券不存在！");
+        }
+        if(coupon.getStatus() != CouponStatus.DRAFT){
+            throw new BizIllegalException("非代发放状态的优惠券不可更新！");
+        }
+        // 1.保存优惠券
+        // 1.1.转PO
+        Coupon updateCoupon = BeanUtils.copyBean(dto, Coupon.class);
+        // 1.2.保存
+        updateById(coupon);
+
+        if (!dto.getSpecific()) {
+            // 没有范围限定
+            return;
+        }
+        Long couponId = updateCoupon.getId();
+        // 2.保存限定范围
+        List<Long> scopes = dto.getScopes();
+        if (CollUtils.isEmpty(scopes)) {
+            return;
+        }
+        //先删除
+        LambdaQueryWrapper<CouponScope> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CouponScope::getCouponId, dto.getId());
+        scopeService.remove(wrapper);
+
+        // 2.1.转换PO
+        List<CouponScope> list = scopes.stream()
+                .map(bizId -> new CouponScope().setBizId(bizId).setCouponId(couponId))
+                .collect(Collectors.toList());
+        // 2.2.保存
+        scopeService.saveBatch(list);
+    }
+
+    @Override
+    public void delCouponById(Long couponId) {
+        Coupon coupon = lambdaQuery()
+                .eq(Coupon::getId, couponId)
+                .select(Coupon::getStatus)
+                .last("limit 1")
+                .one();
+        if(coupon == null){
+            throw new BizIllegalException("要删除的优惠券不存在！");
+        }
+        if(coupon.getStatus() != CouponStatus.DRAFT){
+            throw new BizIllegalException("非代发放状态的优惠券不可删除！");
+        }
+
+        //删除
+        removeById(couponId);
+
+        LambdaQueryWrapper<CouponScope> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.eq(CouponScope::getCouponId, couponId);
+        scopeService.remove(wrapper1);
+
+        LambdaQueryWrapper<ExchangeCode> wrapper2 = new LambdaQueryWrapper<>();
+        wrapper2.eq(ExchangeCode::getExchangeTargetId, couponId);
+        codeService.remove(wrapper2);
+
+
     }
 }

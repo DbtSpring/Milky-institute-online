@@ -46,4 +46,16 @@ public class CouponController {
         couponService.beginIssue(dto);
     }
 
+    @ApiOperation("修改优惠券接口")
+    @PostMapping
+    public void updateCoupon(@RequestBody @Valid CouponFormDTO dto){
+        couponService.updateCoupon(dto);
+    }
+
+    @ApiOperation("删除优惠券接口")
+    @PostMapping
+    public void delCouponByCouponId(@RequestBody Long couponId){
+        couponService.delCouponById(couponId);
+    }
+
 }
