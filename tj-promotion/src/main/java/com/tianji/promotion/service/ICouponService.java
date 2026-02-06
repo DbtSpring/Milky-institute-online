@@ -7,8 +7,10 @@ import com.tianji.promotion.pojo.entity.Coupon;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tianji.promotion.pojo.query.CouponQuery;
 import com.tianji.promotion.pojo.vo.CouponPageVO;
+import com.tianji.promotion.pojo.vo.CouponVO;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * <p>
@@ -28,4 +30,6 @@ public interface ICouponService extends IService<Coupon> {
     void updateCoupon(@Valid CouponFormDTO dto);
 
     void delCouponById(Long couponId);
+
+    List<CouponVO> queryIssuingCoupons();
 }

@@ -9,25 +9,32 @@ import com.tianji.common.exceptions.BizIllegalException;
 import com.tianji.common.utils.BeanUtils;
 import com.tianji.common.utils.CollUtils;
 import com.tianji.common.utils.StringUtils;
+import com.tianji.common.utils.UserContext;
 import com.tianji.promotion.enums.CouponStatus;
 import com.tianji.promotion.enums.ObtainType;
+import com.tianji.promotion.enums.UserCouponStatus;
 import com.tianji.promotion.mapper.CouponMapper;
 import com.tianji.promotion.pojo.dto.CouponFormDTO;
 import com.tianji.promotion.pojo.dto.CouponIssueFormDTO;
 import com.tianji.promotion.pojo.entity.Coupon;
 import com.tianji.promotion.pojo.entity.CouponScope;
 import com.tianji.promotion.pojo.entity.ExchangeCode;
+import com.tianji.promotion.pojo.entity.UserCoupon;
 import com.tianji.promotion.pojo.query.CouponQuery;
 import com.tianji.promotion.pojo.vo.CouponPageVO;
+import com.tianji.promotion.pojo.vo.CouponVO;
 import com.tianji.promotion.service.ICouponScopeService;
 import com.tianji.promotion.service.ICouponService;
 import com.tianji.promotion.service.IExchangeCodeService;
+import com.tianji.promotion.service.IUserCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +43,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
 
     private final ICouponScopeService scopeService;
     private final IExchangeCodeService codeService;
+    private final IUserCouponService userCouponService;
 
     @Override
     @Transactional
@@ -190,5 +198,47 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         codeService.remove(wrapper2);
 
 
+    }
+
+
+    @Override
+    public List<CouponVO> queryIssuingCoupons() {
+        // 1.查询发放中的优惠券列表
+        List<Coupon> coupons = lambdaQuery()
+                .eq(Coupon::getStatus, CouponStatus.ISSUING)
+                .eq(Coupon::getObtainWay, ObtainType.PUBLIC)
+                .list();
+        if (CollUtils.isEmpty(coupons)) {
+            return CollUtils.emptyList();
+        }
+        // 2.统计当前用户已经领取的优惠券的信息
+        List<Long> couponIds = coupons.stream().map(Coupon::getId).collect(Collectors.toList());
+        // 2.1.查询当前用户已经领取的优惠券的数据
+        List<UserCoupon> userCoupons = userCouponService.lambdaQuery()
+                .eq(UserCoupon::getUserId, UserContext.getUser())
+                .in(UserCoupon::getCouponId, couponIds)
+                .list();
+        // 2.2.统计当前用户对优惠券的已经领取数量
+        Map<Long, Long> issuedMap = userCoupons.stream()
+                .collect(Collectors.groupingBy(UserCoupon::getCouponId, Collectors.counting()));
+        // 2.3.统计当前用户对优惠券的已经领取并且未使用的数量
+        Map<Long, Long> unusedMap = userCoupons.stream()
+                .filter(uc -> uc.getStatus() == UserCouponStatus.UNUSED)
+                .collect(Collectors.groupingBy(UserCoupon::getCouponId, Collectors.counting()));
+        // 3.封装VO结果
+        List<CouponVO> list = new ArrayList<>(coupons.size());
+        for (Coupon c : coupons) {
+            // 3.1.拷贝PO属性到VO
+            CouponVO vo = BeanUtils.copyBean(c, CouponVO.class);
+            list.add(vo);
+            // 3.2.是否可以领取：已经被领取的数量 < 优惠券总数量 && 当前用户已经领取的数量 < 每人限领数量
+            vo.setAvailable(
+                    c.getIssueNum() < c.getTotalNum()
+                            && issuedMap.getOrDefault(c.getId(), 0L) < c.getUserLimit()
+            );
+            // 3.3.是否可以使用：当前用户已经领取并且未使用的优惠券数量 > 0
+            vo.setReceived(unusedMap.getOrDefault(c.getId(),  0L) > 0);
+        }
+        return list;
     }
 }

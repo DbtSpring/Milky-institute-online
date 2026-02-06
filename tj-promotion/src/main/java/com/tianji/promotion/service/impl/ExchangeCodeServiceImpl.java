@@ -73,4 +73,14 @@ public class ExchangeCodeServiceImpl extends ServiceImpl<ExchangeCodeMapper, Exc
         //ZSet其实是加了Score得Set，算是Map
         redisTemplate.opsForZSet().add(COUPON_RANGE_KEY, coupon.getId().toString(), maxSerialNum);
     }
+
+
+    //设置bitMap（用来记录兑换码是否已兑换 0/1）
+    @Override
+    public boolean updateExchangeMark(long serialNum, boolean mark) {
+        Boolean boo = redisTemplate.opsForValue().setBit(COUPON_CODE_MAP_KEY, serialNum, mark);
+        //setBit之前是否为True（是否已兑换）
+        return boo != null && boo;
+    }
+
 }
