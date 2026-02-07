@@ -39,8 +39,8 @@ SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-
 | tj-exam      | 考试服务 | ⏳ 开发中 |
 | tj-search    | 搜索服务 | ✅ 已完成 |
 | tj-trade     | 交易服务 | ⏳ 开发中 |
-| tj-learning  | 学习服务 | ⏳ 开发中 |
-| tj-promotion | 促销服务 | ❌ 未开始 |
+| tj-learning  | 学习服务 | 🆕已完成（新增） |
+| tj-promotion | 促销服务 | ⏳开发中 |
 | tj-media     | 媒资服务 | ✅ 已完成 |
 | tj-data      | 数据服务 | ⏳ 开发中 |
 | tj-remark    | 评价服务 | ❌ 未开始 |
