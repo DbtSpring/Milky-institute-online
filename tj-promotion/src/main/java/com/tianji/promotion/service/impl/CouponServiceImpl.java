@@ -6,10 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tianji.common.domain.dto.PageDTO;
 import com.tianji.common.exceptions.BadRequestException;
 import com.tianji.common.exceptions.BizIllegalException;
-import com.tianji.common.utils.BeanUtils;
-import com.tianji.common.utils.CollUtils;
-import com.tianji.common.utils.StringUtils;
-import com.tianji.common.utils.UserContext;
+import com.tianji.common.utils.*;
 import com.tianji.promotion.enums.CouponStatus;
 import com.tianji.promotion.enums.ObtainType;
 import com.tianji.promotion.enums.UserCouponStatus;
@@ -27,12 +24,15 @@ import com.tianji.promotion.service.ICouponScopeService;
 import com.tianji.promotion.service.ICouponService;
 import com.tianji.promotion.service.IExchangeCodeService;
 import com.tianji.promotion.service.IUserCouponService;
+import com.tianji.promotion.constants.PromotionConstants;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,6 +44,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
     private final ICouponScopeService scopeService;
     private final IExchangeCodeService codeService;
     private final IUserCouponService userCouponService;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     @Transactional
@@ -123,11 +124,30 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         // 4.3.写入数据库
         updateById(c);
 
-        // 5.判断是否需要生成兑换码，优惠券类型必须是兑换码，优惠券状态必须是待发放
+        // 5.添加redis缓存(用于领取时高效校验，配合校验后的mq），前提是立刻发放的
+        if (isBegin) {
+            coupon.setIssueBeginTime(c.getIssueBeginTime());
+            coupon.setIssueEndTime(c.getIssueEndTime());
+            cacheCouponInfo(coupon);
+        }
+
+
+        // 6.判断是否需要生成兑换码，优惠券类型必须是兑换码，优惠券状态必须是待发放
         if(coupon.getObtainWay() == ObtainType.ISSUE && coupon.getStatus() == CouponStatus.DRAFT){
             coupon.setIssueEndTime(c.getIssueEndTime());
             codeService.asyncGenerateCode(coupon);
         }
+    }
+
+    private void cacheCouponInfo(Coupon coupon) {
+        // 1.组织数据
+        Map<String, String> map = new HashMap<>(4);
+        map.put("issueBeginTime", String.valueOf(DateUtils.toEpochMilli(coupon.getIssueBeginTime())));
+        map.put("issueEndTime", String.valueOf(DateUtils.toEpochMilli(coupon.getIssueEndTime())));
+        map.put("totalNum", String.valueOf(coupon.getTotalNum()));
+        map.put("userLimit", String.valueOf(coupon.getUserLimit()));
+        // 2.写缓存
+        redisTemplate.opsForHash().putAll(PromotionConstants.COUPON_CACHE_KEY_PREFIX + coupon.getId(), map);
     }
 
     @Override
@@ -240,5 +260,36 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
             vo.setReceived(unusedMap.getOrDefault(c.getId(),  0L) > 0);
         }
         return list;
+    }
+
+    @Override
+    @Transactional
+    public void pauseIssue(Long id) {
+        // 1.查询旧优惠券
+        Coupon coupon = getById(id);
+        if (coupon == null) {
+            throw new BadRequestException("优惠券不存在");
+        }
+
+        // 2.当前券状态必须是未开始或进行中
+        CouponStatus status = coupon.getStatus();
+        if (status != CouponStatus.UN_ISSUE && status != CouponStatus.ISSUING) {
+            // 状态错误，直接结束
+            return;
+        }
+
+        // 3.更新状态
+        boolean success = lambdaUpdate()
+                .set(Coupon::getStatus, CouponStatus.PAUSE)
+                .eq(Coupon::getId, id)
+                .in(Coupon::getStatus, CouponStatus.UN_ISSUE, CouponStatus.ISSUING)
+                .update();
+        if (!success) {
+            // 可能是重复更新，结束
+            log.error("重复暂停优惠券");
+        }
+
+        // 4.删除缓存
+        redisTemplate.delete(PromotionConstants.COUPON_CACHE_KEY_PREFIX + id);
     }
 }

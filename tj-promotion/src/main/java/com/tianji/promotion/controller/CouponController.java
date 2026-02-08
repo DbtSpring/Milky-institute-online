@@ -66,4 +66,10 @@ public class CouponController {
         return couponService.queryIssuingCoupons();
     }
 
+    @ApiOperation("暂停发放接口")
+    @PutMapping("/{id}/pause")
+    public void pauseIssue(@PathVariable Long id){
+        couponService.pauseIssue(id);
+    }
+
 }
