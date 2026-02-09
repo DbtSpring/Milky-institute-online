@@ -41,9 +41,9 @@ public class LockAspect {
         }
         // 1.基于SPEL表达式解析锁的 name
         String name = getLockName(properties.name(), pjp);
-        // 2.得到锁对象
+        // 2.得到锁对象(用工厂模式获取lockType）
         RLock rLock = properties.lockType().getLock(redissonClient, name);
-        // 3.尝试获取锁
+        // 3.尝试获取锁（用策略模式获取lockStrategy）
         boolean success = properties.lockStrategy().tryLock(rLock, properties);
         if (!success) {
             // 获取锁失败，结束

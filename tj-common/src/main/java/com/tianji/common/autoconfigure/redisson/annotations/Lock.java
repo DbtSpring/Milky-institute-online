@@ -42,12 +42,12 @@ public @interface Lock {
     boolean autoUnlock() default true;
 
     /**
-     * 锁的类型，包括：可重入锁、公平锁、读锁、写锁
+     * 锁的类型（用的是工厂模式），包括：可重入锁、公平锁、读锁、写锁
      */
     LockType lockType() default LockType.DEFAULT;
 
     /**
-     * 锁策略，包括5种，默认策略是 不断尝试获取锁，直到成功或超时，超时后抛出异常
+     * 锁策略（用的是策略模式），包括5种，默认策略是 不断尝试获取锁，直到成功或超时，超时后抛出异常
      */
     LockStrategy lockStrategy() default LockStrategy.FAIL_AFTER_RETRY_TIMEOUT;
 }

@@ -55,6 +55,7 @@ SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-
 | tj-remark    | 评价服务 | ⏳ 开发中        |
 | tj-agent    | langchain智能体 | ⏳ 开发中       |
 
+
 ## 项目域名列表
 
 | 名称             | 域名               | 账号密码     | 端口  |
