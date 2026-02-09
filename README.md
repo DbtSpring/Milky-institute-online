@@ -54,6 +54,20 @@ SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-
 | tj-remark    | 评价服务 | ⏳ 开发中        |
 | tj-agent    | langchain智能体 | ⏳ 开发中       |
 
+## 项目域名列表
+
+| 名称             | 域名               | 账号密码     | 端口  |
+| ---------------- | ------------------ | ------------ | ----- |
+| Git私服          | git.tianji.com     | tjxt/123321  | 10880 |
+| Jenkins持续集成  | jenkins.tianji.com | root/123     | 18080 |
+| RabbitMQ         | mq.tianji.com      | tjxt/123321  | 15672 |
+| Nacos控制台      | nacos.tianji.com   | nacos/nacos  | 8848  |
+| xxl-job控制台    | xxljob.tianji.com  | admin/123456 | 8880  |
+| ES的Kibana控制台 | es.tianji.com      | -            | 5601  |
+| 微服务网关       | api.tianji.com     | -            | 10010 |
+| 用户端入口       | www.tianji.com     | -            | 18081 |
+| 管理端入口       | manage.tianji.com  | -            |       |
+
 ## 项目运维流程
 
 提交代码到gogs-->通知jenkins-->jenkins拉取代码-->自动构建-->自动部署-->自动测试（基于脚本）
