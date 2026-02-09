@@ -1,7 +1,12 @@
 package com.tianji.promotion.mapper;
 
-import com.tianji.promotion.pojo.entity.UserCoupon;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.tianji.promotion.enums.UserCouponStatus;
+import com.tianji.promotion.pojo.entity.Coupon;
+import com.tianji.promotion.pojo.entity.UserCoupon;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -11,5 +16,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author 天哥
  */
 public interface UserCouponMapper extends BaseMapper<UserCoupon> {
+
+    List<Coupon> queryMyCoupons(@Param("userId") Long userId);
+
+    List<Coupon> queryCouponByUserCouponIds(
+            @Param("userCouponIds") List<Long> userCouponIds,
+            @Param("status") UserCouponStatus status);
 
 }
