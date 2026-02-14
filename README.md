@@ -1,12 +1,16 @@
+**中文版介绍：** [跳转](#星瀚学堂)
+
+**English intro:**  [GOTO](#Milky-Institute)
+
 # 星瀚学堂
 
 ## 项目简介：
 
-星瀚学堂是一个基于微服务架构的生产级在线教育项目，面向成年人的非学历职业技能培训。分为学生端和管理端两部分。项目中主要包含有学习服务、课程服务、点赞服务、优惠券服务、搜索服务等。是“天机学堂”的进一步实现和改进版。本仓库为后端仓库
+星瀚学堂是一个基于微服务架构的生产级在线教育项目，面向成年人的非学历职业技能培训。分为学生端和管理端两部分。项目中主要包含有学习服务、优惠券服务、课程推荐AI Agent等。是“天机学堂”的进一步实现和改进版。本仓库为后端仓库
 
 ## 技术栈：
 
-SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-Job等
+SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-Job、Spring AI等
 
 ## 项目负责（核心功能）
 
@@ -70,11 +74,82 @@ SpringCloud Alibaba、SSM、Redis/Redisson、RabbitMQ、Mysql分库分表、XXL-
 | 用户端入口       | www.tianji.com     | -            | 18081 |
 | 管理端入口       | manage.tianji.com  | -            |       |
 
-## 项目运维
+## 项目运维流程
 
 提交代码到gogs-->通知jenkins-->jenkins拉取代码-->自动构建-->自动部署-->自动测试（基于脚本）
 
 
 
+# Milky Institute
 
+## Project Overview:
+
+Milky Institute is a production-grade online education project built on a microservice architecture, focusing on non-academic vocational skills training for adults. It consists of two parts: the student portal and the admin portal. Key services within the project include Learning Service, Coupon Service, and Lesson Recommendation AI Agent. This project is an improved implementation of "Tianji Academy". This repository contains the backend codebase.
+
+## Tech Stack:
+
+SpringCloud, SSM, Redis/Redisson, RabbitMQ, MySQL (sharding by database and table), XXL-Job, Spring AI etc.
+
+## Project Responsibilities (Core Features)
+
+🆕 **Completed:**
+
+1. Implemented the Learning Service, achieving resume-play functionality using Redis-based write request merging and DelayQueue. Optimized high-concurrency database write operations, controlling errors within 15 seconds.
+2. Developed Coupon Management functionality: generated redemption codes using bitwise weighted sum algorithm and asynchronous threads during coupon distribution, and validated redemption status via BitMap. Ensured readability, non-redeemability, anti-brute-force protection, and high efficiency of redemption codes.
+3. Built Coupon Collection functionality: resolved concurrency security issues using optimistic locking and Redisson distributed locks, fixed lock invalidation caused by transaction boundary issues, and addressed transaction failure via AspectJ dynamic proxy.
+4. Implemented encapsulation of generic distributed locks based on AOP, custom annotations, Factory Pattern, and Strategy Pattern.
+5. Developed Coupon Usage functionality: queried all available coupons, performed preliminary screening, detailed screening, and permutation-combination calculations to generate all valid coupon combinations. Calculated discount details for each combination in parallel using CompletableFuture, and finally filtered out the optimal solution according to predefined rules.
+
+⏳ **Development Plan**
+
+1. Design and implement the Q&A and Comment Module: record Q&A/comment information based on user-selected anonymity settings, generate corresponding points, and push data to the Points System via RabbitMQ.
+2. Build and implement the Like Service: receive like requests from the frontend, store like records and counts, and send MQ messages via scheduled tasks to notify business parties of like count updates.
+3. Implement and optimize the Check-in Function: store check-in records using BitMap data structure, and push check-in information and points to the Points Service via MQ.
+4. Develop Points Ranking functionality: store real-time monthly ranking data using Redis Zset. Persist historical rankings to MySQL (with database and table sharding) via XXL-Job sharding tasks, calculating table names using MybatisPlus dynamic table name feature.
+5. Complete the LangChain Agent Module.
+
+## Project Progress
+
+Based on the basic version of "Sky Academy", some features are yet to be implemented.
+
+Completion status is as follows:
+
+| Microservice Name |  Function Description  |   Completion Status    |
+| :---------------: | :--------------------: | :--------------------: |
+|     tj-parent     |     Parent Project     |      ✅ Completed       |
+|      tj-api       |    Feign Extraction    | 🆕 Completed (Improved) |
+|     tj-common     |     Common Project     | 🆕 Completed (Improved) |
+|    tj-message     |     Message Center     |      ✅ Completed       |
+|    tj-gateway     |        Gateway         | 🆕 Completed (Improved) |
+|      tj-auth      | Authentication Service | 🆕 Completed (Improved) |
+|      tj-user      |      User Service      |      ✅ Completed       |
+|      tj-pay       |    Payment Service     |      ✅ Completed       |
+|     tj-course     |     Course Service     | 🆕 Completed (Improved) |
+|      tj-exam      |      Exam Service      |    ⏳ In Development    |
+|     tj-search     |     Search Service     |      ✅ Completed       |
+|     tj-trade      |    Trading Service     | 🆕 Completed (Improved) |
+|    tj-learning    |    Learning Service    |   🆕 Completed (New)    |
+|   tj-promotion    |   Promotion Service    |   🆕 Completed (New)    |
+|     tj-media      |     Media Service      |      ✅ Completed       |
+|      tj-data      |      Data Service      |    ⏳ In Development    |
+|     tj-remark     |     Review Service     |    ⏳ In Development    |
+|     tj-agent      |    LangChain Agent     |    ⏳ In Development    |
+
+## Project Domain List
+
+|         Name         |                      Domain                      | Account & Password | Port  |
+| :------------------: | :----------------------------------------------: | :----------------: | :---: |
+|  Git Private Server  |     [git.tianji.com](https://git.tianji.com)     |    tjxt/123321     | 10880 |
+|      Jenkins CI      | [jenkins.tianji.com](https://jenkins.tianji.com) |      root/123      | 18080 |
+|       RabbitMQ       |      [mq.tianji.com](https://mq.tianji.com)      |    tjxt/123321     | 15672 |
+|    Nacos Console     |   [nacos.tianji.com](https://nacos.tianji.com)   |    nacos/nacos     | 8848  |
+|   XXL-Job Console    |  [xxljob.tianji.com](https://xxljob.tianji.com)  |    admin/123456    | 8880  |
+|  ES Kibana Console   |      [es.tianji.com](https://es.tianji.com)      |         -          | 5601  |
+| Microservice Gateway |     [api.tianji.com](https://api.tianji.com)     |         -          | 10010 |
+|    Student Portal    |     [www.tianji.com](https://www.tianji.com)     |         -          | 18081 |
+|     Admin Portal     |  [manage.tianji.com](https://manage.tianji.com)  |         -          |       |
+
+## Project Operation & Maintenance Process
+
+Submit code to Gogs --> Notify Jenkins --> Jenkins pulls code --> Automatic build --> Automatic deployment --> Automatic testing (script-based)
 
