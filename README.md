@@ -116,24 +116,24 @@ Completion status is as follows:
 
 | Microservice Name |  Function Description  |   Completion Status    |
 | :---------------: | :--------------------: | :--------------------: |
-|     tj-parent     |     Parent Project     |      ✅ Completed       |
+|     tj-parent     |     Parent Project     | ✅ Completed       |
 |      tj-api       |    Feign Extraction    | 🆕 Completed (Improved) |
 |     tj-common     |     Common Project     | 🆕 Completed (Improved) |
-|    tj-message     |     Message Center     |      ✅ Completed       |
+|    tj-message     |     Message Center     | ✅ Completed       |
 |    tj-gateway     |        Gateway         | 🆕 Completed (Improved) |
 |      tj-auth      | Authentication Service | 🆕 Completed (Improved) |
-|      tj-user      |      User Service      |      ✅ Completed       |
-|      tj-pay       |    Payment Service     |      ✅ Completed       |
+|      tj-user      |      User Service      | ✅ Completed       |
+|      tj-pay       |    Payment Service     | ✅ Completed       |
 |     tj-course     |     Course Service     | 🆕 Completed (Improved) |
-|      tj-exam      |      Exam Service      |    ⏳ In Development    |
-|     tj-search     |     Search Service     |      ✅ Completed       |
+|      tj-exam      |      Exam Service      | ⏳ In Development    |
+|     tj-search     |     Search Service     | ✅ Completed       |
 |     tj-trade      |    Trading Service     | 🆕 Completed (Improved) |
-|    tj-learning    |    Learning Service    |   🆕 Completed (New)    |
-|   tj-promotion    |   Promotion Service    |   🆕 Completed (New)    |
-|     tj-media      |     Media Service      |      ✅ Completed       |
-|      tj-data      |      Data Service      |    ⏳ In Development    |
-|     tj-remark     |     Review Service     |    ⏳ In Development    |
-|     tj-agent      |    LangChain Agent     |    ⏳ In Development    |
+|    tj-learning    |    Learning Service    | 🆕 Completed (New)    |
+|   tj-promotion    |   Promotion Service    | 🆕 Completed (New)    |
+|     tj-media      |     Media Service      | ✅ Completed       |
+|      tj-data      |      Data Service      | ⏳ In Development    |
+|     tj-remark     |     Review Service     | ⏳ In Development    |
+|     tj-agent      |    LangChain Agent     | ⏳ In Development    |
 
 ## Project Domain List
 
